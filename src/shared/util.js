@@ -79,15 +79,35 @@ export function isPromise (val: any): boolean {
   )
 }
 
+let trustedTypes = undefined
+export function getTrustedTypes() {
+  if (trustedTypes === undefined) {
+    // TrustedTypes have been renamed to trustedTypes https://github.com/WICG/trusted-types/issues/177
+    trustedTypes = typeof window !== 'undefined' ? (window.trustedTypes || window.TrustedTypes) : null;
+  }
+  return trustedTypes;
+}
+
+export function isTrustedValue(value: any): boolean {
+  const tt = getTrustedTypes();
+  if (!tt) return false;
+  // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
+  else return tt.isHTML(value) || tt.isScript(value) || tt.isScriptURL(value) || (tt.isURL && tt.isURL(value))
+}
+
 /**
  * Convert a value to a string that is actually rendered.
  */
 export function toString (val: any): string {
-  return val == null
-    ? ''
-    : Array.isArray(val) || (isPlainObject(val) && val.toString === _toString)
-      ? JSON.stringify(val, null, 2)
-      : String(val)
+  if (isTrustedValue(val)) {
+    return val;
+  } else {
+    return val == null
+      ? ''
+      : Array.isArray(val) || (isPlainObject(val) && val.toString === _toString)
+        ? JSON.stringify(val, null, 2)
+        : String(val)
+  }
 }
 
 /**
