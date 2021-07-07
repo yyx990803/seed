@@ -55,7 +55,7 @@ export default class TemplateRenderer {
     this.inject = options.inject !== false
     // if no template option is provided, the renderer is created
     // as a utility object for rendering assets like preload links and scripts.
-    
+
     const { template } = options
     this.parsedTemplate = template
       ? typeof template === 'string'
@@ -133,7 +133,7 @@ export default class TemplateRenderer {
     return (
       // render links for css files
       (cssFiles.length
-        ? cssFiles.map(({ file }) => `<link rel="stylesheet" href="${this.publicPath}${file}">`).join('')
+        ? cssFiles.map(({ file }) => `<link rel="stylesheet" href="${this.publicPath}${file}"${getNonceAttribute(context)}>`).join('')
         : '') +
       // context.styles is a getter exposed by vue-style-loader which contains
       // the inline component styles collected during SSR
@@ -177,7 +177,7 @@ export default class TemplateRenderer {
           asType !== '' ? ` as="${asType}"` : ''
         }${
           extra
-        }>`
+        }${getNonceAttribute(context)}>`
       }).join('')
     } else {
       return ''
@@ -198,7 +198,7 @@ export default class TemplateRenderer {
         if (alreadyRendered(file)) {
           return ''
         }
-        return `<link rel="prefetch" href="${this.publicPath}${file}">`
+        return `<link rel="prefetch" href="${this.publicPath}${file}"${getNonceAttribute(context)}>`
       }).join('')
     } else {
       return ''
@@ -214,9 +214,8 @@ export default class TemplateRenderer {
     const autoRemove = process.env.NODE_ENV === 'production'
       ? ';(function(){var s;(s=document.currentScript||document.scripts[document.scripts.length-1]).parentNode.removeChild(s);}());'
       : ''
-    const nonceAttr = context.nonce ? ` nonce="${context.nonce}"` : ''
     return context[contextKey]
-      ? `<script${nonceAttr}>window.${windowKey}=${state}${autoRemove}</script>`
+      ? `<script${getNonceAttribute(context)}>window.${windowKey}=${state}${autoRemove}</script>`
       : ''
   }
 
@@ -226,7 +225,7 @@ export default class TemplateRenderer {
       const async = (this.getUsedAsyncFiles(context) || []).filter(({ file }) => isJS(file))
       const needed = [initial[0]].concat(async, initial.slice(1))
       return needed.map(({ file }) => {
-        return `<script src="${this.publicPath}${file}" defer></script>`
+        return `<script src="${this.publicPath}${file}" defer${getNonceAttribute(context)}></script>`
       }).join('')
     } else {
       return ''
@@ -274,4 +273,8 @@ function getPreloadType (ext: string): string {
     // not exhausting all possibilities here, but above covers common cases
     return ''
   }
+}
+
+function getNonceAttribute(context: Object): string {
+  return context.nonce ? ` nonce="${context.nonce}"` : ''
 }
