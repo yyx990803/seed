@@ -111,8 +111,9 @@ export interface VueConstructor<V extends Vue = Vue> {
   component<Props>(id: string, definition: FunctionalComponentOptions<Props, RecordPropsDefinition<Props>>): ExtendedVue<V, {}, {}, {}, Props>;
   component(id: string, definition?: ComponentOptions<V>): ExtendedVue<V, {}, {}, {}, {}>;
 
-  use<T>(plugin: PluginObject<T> | PluginFunction<T>, options?: T): VueConstructor<V>;
-  use(plugin: PluginObject<any> | PluginFunction<any>, ...options: any[]): VueConstructor<V>;
+  // this prevents use to be called without parameters if they are mandatory
+  use<T>(plugin: PluginObject<T> | PluginFunction<T>, ...options: T[]): VueConstructor<V>;
+  use(plugin: PluginObject<unknown> | PluginFunction<unknown>, ...options: unknown[]): VueConstructor<V>;
   mixin(mixin: VueConstructor | ComponentOptions<Vue>): VueConstructor<V>;
   compile(template: string): {
     render(createElement: typeof Vue.prototype.$createElement): VNode;
